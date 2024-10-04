@@ -1,15 +1,18 @@
-from django.db.models import Count
+from django.db.models import Count, Avg
 from rest_framework import generics
 from django_filters import rest_framework as filters
+from rest_framework.permissions import IsAuthenticated
 
 from .filters import CatFilter
-from .models import Cat, Breed
-from .serializers import CatSerializer, BreedSerializer
-from .permissions import IsOwnerOrReadOnly
+from .models import Cat, Breed, Rate
+from .serializers import CatSerializer, BreedSerializer, RateSerializer
+from .permissions import IsOwnerOrReadOnly, IsNotAuthor
 
 
 class СatListApiView(generics.ListAPIView):
-    queryset = Cat.objects.all().select_related('user', 'breed')
+    queryset = Cat.objects.all().select_related('user', 'breed').annotate(
+        average_rating=Avg('comments__rate')
+    )
     serializer_class = CatSerializer
 
 
@@ -25,6 +28,26 @@ class CatFilterApiView(generics.ListAPIView):
     serializer_class = CatSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = CatFilter
+
+
+class CatCreateApiView(generics.CreateAPIView):
+    queryset = Cat.objects.all()
+    serializer_class = CatSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class CatRateApiView(generics.CreateAPIView):
+    queryset = Rate.objects.all()
+    serializer_class = RateSerializer
+    permission_classes = [IsNotAuthor]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        cat_id = self.kwargs.get('id')
+        cat = Cat.objects.get(id=cat_id)
+
+        serializer.save(user=user, cat=cat)
 
 
 class BreedListApiView(generics.ListAPIView):

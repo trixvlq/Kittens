@@ -24,15 +24,16 @@ class Cat(models.Model):
                              max_length=10)
     age = models.PositiveIntegerField()
     description = models.TextField()
-    breed = models.ForeignKey(Breed, on_delete=models.CASCADE, related_name="cats")
+    breed = models.ForeignKey(Breed, on_delete=models.CASCADE, related_name='cats')
 
     def __str__(self):
         return f"{self.color} {self.breed.name}"
 
 
 class Rate(models.Model):
-    cat = models.ForeignKey(Cat, on_delete=models.CASCADE)
+    cat = models.ForeignKey(Cat, on_delete=models.CASCADE,related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.CharField(max_length=100)
     rate = models.PositiveIntegerField(choices=(
         (1, 1),
         (2, 2),
