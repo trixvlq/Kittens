@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  cat-app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/backend
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=${DATABASE}
+      - DB_NAME=${DBNAME}
+      - DB_USER=${DBUSER}
+      - DB_PASS=${DBPASS}
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - database
+
+  database:
+    image: postgres:alpine
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DBNAME}
+      - POSTGRES_USER=${DBUSER}
+      - POSTGRES_PASSWORD=${DBPASS}
+
+  tests:
+    build:
+      context: .
+    volumes:
+      - ./backend:/backend
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=${DATABASE}
+      - DB_NAME=${DBNAME}
+      - DB_USER=${DBUSER}
+      - DB_PASS=${DBPASS}
+    depends_on:
+      - database
+    command: >
+      sh -c "python manage.py migrate &&
+             pytest --disable-warnings"
