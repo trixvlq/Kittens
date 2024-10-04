@@ -3,6 +3,8 @@ from .models import *
 
 
 class BreedSerializer(serializers.ModelSerializer):
+    count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Breed
         fields = '__all__'
